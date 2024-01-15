@@ -1,5 +1,6 @@
 using System;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace RhinoInside
 {
@@ -54,36 +55,43 @@ namespace RhinoInside
 
     static string FindRhinoSystemDirectory()
     {
-      var major = Assembly.GetExecutingAssembly().GetName().Version.Major;
-      string baseName = @"SOFTWARE\McNeel\Rhinoceros";
-      using (var baseKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(baseName))
+      if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
       {
-        string[] children = baseKey.GetSubKeyNames();
-        Array.Sort(children);
-        string versionName = "";
-        for (int i = children.Length - 1; i >= 0; i--)
+        var major = Assembly.GetExecutingAssembly().GetName().Version.Major;
+        string baseName = @"SOFTWARE\McNeel\Rhinoceros";
+        using (var baseKey = Microsoft.Win32.Registry.LocalMachine.OpenSubKey(baseName))
         {
-          // 20 Jan 2020 S. Baer (https://github.com/mcneel/rhino.inside/issues/248)
-          // A generic double.TryParse is failing when run under certain locales.
-          if (double.TryParse(children[i], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double d))
+          string[] children = baseKey.GetSubKeyNames();
+          Array.Sort(children);
+          string versionName = "";
+          for (int i = children.Length - 1; i >= 0; i--)
           {
-            versionName = children[i];
-
-            if (!UseLatest && (int)Math.Floor(d) != major)
-              continue;
-
-            using (var installKey = baseKey.OpenSubKey($"{versionName}\\Install"))
+            // 20 Jan 2020 S. Baer (https://github.com/mcneel/rhino.inside/issues/248)
+            // A generic double.TryParse is failing when run under certain locales.
+            if (double.TryParse(children[i], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out double d))
             {
-              string corePath = installKey.GetValue("CoreDllPath") as string;
-              if (System.IO.File.Exists(corePath))
+              versionName = children[i];
+
+              if (!UseLatest && (int) Math.Floor(d) != major)
+                continue;
+
+              using (var installKey = baseKey.OpenSubKey($"{versionName}\\Install"))
               {
-                return System.IO.Path.GetDirectoryName(corePath);
+                string corePath = installKey.GetValue("CoreDllPath") as string;
+                if (System.IO.File.Exists(corePath))
+                {
+                  return System.IO.Path.GetDirectoryName(corePath);
+                }
               }
             }
           }
         }
+        return null;
       }
-      return null;
+      else
+      {
+        return null;
+      }
     }
   }
 }

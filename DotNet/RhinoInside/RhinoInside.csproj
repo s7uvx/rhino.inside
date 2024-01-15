@@ -10,5 +10,6 @@
   <ItemGroup>
     <PackageReference Include="NuGet.Build.Tasks.Pack" Version="6.8.0"/>
     <PackageReference Include="Rhino3dm" Version="8.0.1"/>
+    <PackageReference Include="RhinoCommon" Version="8.3.24009.15001"/>
   </ItemGroup>
 </Project>
