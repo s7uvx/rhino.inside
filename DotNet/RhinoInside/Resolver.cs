@@ -90,7 +90,7 @@ namespace RhinoInside
       }
       else
       {
-        string corePath = @"/Applications/Rhino 8.app/Contents/MacOS/Rhinoceros";
+        string corePath = @"/Applications/Rhino 8.app/Contents/MacOS/";
         if (System.IO.Path.Exists(corePath))
           return  corePath;
         else
